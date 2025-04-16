@@ -7,7 +7,7 @@ const userSchema = {
     id: { type: 'integer' },
     email: { type: 'string' },
     name: { type: 'string' },
-    role: { type: 'string', enum: ['CUSTOMER', 'ADMIN', 'SUPER_ADMIN'] },
+    role: { type: 'string', enum: ['USER', 'ADMIN', 'SUPER_ADMIN'] },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' }
   }
@@ -110,7 +110,7 @@ const updateRoleSchema = {
       userId: { type: 'integer' },
       role: { 
         type: 'string',
-        enum: ['CUSTOMER', 'ADMIN', 'SUPER_ADMIN']
+        enum: ['USER', 'ADMIN', 'SUPER_ADMIN']
       }
     }
   },

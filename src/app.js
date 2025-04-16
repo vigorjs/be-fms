@@ -14,7 +14,6 @@ const rbacPlugin = require('./plugins/rbac');
 
 // Import routes
 const authRoutes = require('./modules/auth/routes');
-const productRoutes = require('./modules/products/routes');
 
 // Logger configuration
 function createLoggerConfig() {
@@ -108,7 +107,6 @@ function build(opts = {}) {
   app.register((apiInstance, opts, done) => {
     // Register routes within the /api prefix
     apiInstance.register(authRoutes, { prefix: '/auth' });
-    apiInstance.register(productRoutes, { prefix: '/products' });
     
     done();
   }, { prefix: '/api' });

@@ -6,7 +6,7 @@ Modern, modular Fastify API template with JWT authentication, PostgreSQL, and Pr
 
 - **Modular Architecture**: Domain-based structure for better maintainability
 - **JWT Authentication**: Built-in auth with register, login, and protected routes
-- **Role-Based Access Control (RBAC)**: Three user roles (CUSTOMER, ADMIN, SUPER_ADMIN) with different permissions
+- **Role-Based Access Control (RBAC)**: Three user roles (USER, ADMIN, SUPER_ADMIN) with different permissions
 - **PostgreSQL + Prisma ORM**: Type-safe database access with easy migrations
 - **Schema Validation**: Request and response validation using JSON Schema
 - **Swagger Documentation**: Auto-generated API docs available at `/documentation`
@@ -97,7 +97,7 @@ npm start
 
 This template implements role-based access control with three user roles:
 
-- **CUSTOMER**: Regular users with basic permissions
+- **USER**: Regular users with basic permissions
 - **ADMIN**: Administrative users with elevated permissions
 - **SUPER_ADMIN**: Top-level administrators with full access
 
@@ -113,7 +113,7 @@ This header must match the SUPER_ADMIN_KEY value in your .env file.
 
 ### Role Permissions
 
-| Action | CUSTOMER | ADMIN | SUPER_ADMIN |
+| Action | USER | ADMIN | SUPER_ADMIN |
 |--------|----------|-------|-------------|
 | Register/Login | ✓ | ✓ | ✓ |
 | View Products | ✓ | ✓ | ✓ |
@@ -159,22 +159,13 @@ All endpoints are prefixed with `/api`.
 
 ### Authentication
 
-- `POST /api/auth/register` - Register as a customer (public)
+- `POST /api/auth/register` - Register as a USER (public)
 - `POST /api/auth/login` - Login and get JWT token (public)
 - `GET /api/auth/me` - Get current user info (requires authentication)
 - `POST /api/auth/admin` - Create admin user (requires SUPER_ADMIN role)
 - `POST /api/auth/super-admin` - Create super admin (requires special header)
 - `POST /api/auth/role` - Update user role (requires ADMIN or SUPER_ADMIN role)
 - `GET /api/auth/users` - List all users (requires ADMIN or SUPER_ADMIN role)
-
-### Products
-
-- `GET /api/products` - Get all products (public)
-- `GET /api/products/:id` - Get product by ID (public)
-- `POST /api/products` - Create a new product (requires ADMIN or SUPER_ADMIN role)
-- `PUT /api/products/:id` - Update a product (requires ADMIN or SUPER_ADMIN role)
-- `DELETE /api/products/:id` - Delete a product (requires SUPER_ADMIN role)
-
 ### Other Endpoints
 
 - `GET /health` - Health check endpoint (not prefixed with /api)

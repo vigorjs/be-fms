@@ -7,7 +7,7 @@ class AuthService {
     this.prisma = prisma;
   }
 
-  async register(userData, role = 'CUSTOMER') {
+  async register(userData, role = 'USER') {
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: userData.email }
@@ -69,7 +69,7 @@ class AuthService {
 
   async updateUserRole(userId, newRole, currentUserRole) {
     // Only SUPER_ADMIN can update to any role
-    // ADMIN can only update CUSTOMER roles
+    // ADMIN can only update USER roles
     if (currentUserRole !== 'SUPER_ADMIN' && 
         (newRole === 'SUPER_ADMIN' || newRole === 'ADMIN')) {
       throw createForbiddenError('Insufficient permissions to assign this role');
