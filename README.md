@@ -116,9 +116,6 @@ This header must match the SUPER_ADMIN_KEY value in your .env file.
 | Action | USER | ADMIN | SUPER_ADMIN |
 |--------|----------|-------|-------------|
 | Register/Login | ✓ | ✓ | ✓ |
-| View Products | ✓ | ✓ | ✓ |
-| Create/Edit Products | ✗ | ✓ | ✓ |
-| Delete Products | ✗ | ✗ | ✓ |
 | Create Admins | ✗ | ✗ | ✓ |
 | List Users | ✗ | ✓ | ✓ |
 | Change User Roles | ✗ | Limited | ✓ |
