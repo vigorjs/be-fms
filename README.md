@@ -125,17 +125,11 @@ This header must match the SUPER_ADMIN_KEY value in your .env file.
 ```
 src/
 ├── modules/              # Business domain modules
-│   ├── auth/             # Authentication module
-│   │   ├── routes.js     # Route definitions
-│   │   ├── handlers.js   # Request handlers
-│   │   ├── service.js    # Business logic
-│   │   └── schemas/      # Validation schemas
-│   │       └── index.js
-│   └── products/         # Products module
-│       ├── routes.js
-│       ├── handlers.js
-│       ├── service.js
-│       └── schemas/
+│   └── auth/             # Authentication module
+│       ├── routes.js     # Route definitions
+│       ├── handlers.js   # Request handlers
+│       ├── service.js    # Business logic
+│       └── schemas/      # Validation schemas
 │           └── index.js
 ├── plugins/              # Fastify plugins
 │   ├── prisma.js         # Database connection
