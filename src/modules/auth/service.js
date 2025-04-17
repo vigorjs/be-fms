@@ -1,6 +1,6 @@
 // src/modules/auth/service.js
 const bcrypt = require('bcrypt');
-const { createUnauthorizedError, createBadRequestError, createForbiddenError } = require('../../utils/errors');
+const { createUnauthorizedError, createBadRequestError } = require('../../utils/errors');
 
 class AuthService {
   constructor(prisma) {
@@ -35,16 +35,6 @@ class AuthService {
     return userWithoutPassword;
   }
 
-  async registerAdmin(userData, role = 'ADMIN') {
-    // This is a separate method to register admins (can only be called by SUPER_ADMINs)
-    return this.register(userData, role);
-  }
-
-  async registerSuperAdmin(userData) {
-    // This is a separate method to register super admins (requires special header)
-    return this.register(userData, 'SUPER_ADMIN');
-  }
-
   async login(email, password) {
     // Find user
     const user = await this.prisma.user.findUnique({
@@ -67,38 +57,24 @@ class AuthService {
     return userWithoutPassword;
   }
 
-  async updateUserRole(userId, newRole, currentUserRole) {
-    // Only SUPER_ADMIN can update to any role
-    // ADMIN can only update USER roles
-    if (currentUserRole !== 'SUPER_ADMIN' && 
-        (newRole === 'SUPER_ADMIN' || newRole === 'ADMIN')) {
-      throw createForbiddenError('Insufficient permissions to assign this role');
-    }
-
-    // Find user to update
-    const userToUpdate = await this.prisma.user.findUnique({
-      where: { id: userId }
+  async getUserProfile(userId) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
     });
 
-    if (!userToUpdate) {
+    if (!user) {
       throw createBadRequestError('User not found');
     }
 
-    // ADMIN cannot change roles of other ADMINs or SUPER_ADMINs
-    if (currentUserRole === 'ADMIN' && 
-       (userToUpdate.role === 'ADMIN' || userToUpdate.role === 'SUPER_ADMIN')) {
-      throw createForbiddenError('Cannot modify users with equal or higher role');
-    }
-
-    // Update the role
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
-      data: { role: newRole }
-    });
-
-    // Remove password from response
-    const { password, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    return user;
   }
 }
 

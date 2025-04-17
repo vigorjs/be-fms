@@ -155,6 +155,96 @@ const listUsersSchema = {
   }
 };
 
+const getUserByIdSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  response: {
+    200: userSchema
+  }
+};
+
+const searchUsersSchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      search: { type: 'string' },
+      role: { type: 'string', enum: ['USER', 'ADMIN', 'SUPER_ADMIN'] },
+      page: { type: 'integer', minimum: 1 },
+      limit: { type: 'integer', minimum: 1, maximum: 100 }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        users: {
+          type: 'array',
+          items: userSchema
+        },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            totalPages: { type: 'integer' }
+          }
+        }
+      }
+    }
+  }
+};
+
+const updateUserSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  body: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', format: 'email' },
+      name: { type: 'string' },
+      password: { type: 'string', minLength: 6 }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        user: userSchema,
+        message: { type: 'string' }
+      }
+    }
+  }
+};
+
+const deleteUserSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' }
+      }
+    }
+  }
+};
+
 module.exports = {
   registerSchema,
   registerAdminSchema,
@@ -162,5 +252,9 @@ module.exports = {
   loginSchema,
   getMeSchema,
   updateRoleSchema,
-  listUsersSchema
+  listUsersSchema,
+  getUserByIdSchema,
+  searchUsersSchema,
+  updateUserSchema,
+  deleteUserSchema
 };

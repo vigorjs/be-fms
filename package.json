@@ -7,7 +7,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "prisma db seed"
+    "db:seed": "node prisma/seeds/seed.js",
+    "db:fix": "node fix_migration.js"
   },
   "keywords": [
     "fastify",
@@ -27,6 +28,7 @@
     "@logtail/pino": "^0.5.2",
     "@prisma/client": "^6.5.0",
     "bcrypt": "^5.1.1",
+    "busboy": "^1.6.0",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.2",
     "fastify-plugin": "^4.5.1",
@@ -35,6 +37,7 @@
     "prisma": "^6.5.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.7.0",
     "nodemon": "^3.1.0"
   }
 }

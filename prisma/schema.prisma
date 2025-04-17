@@ -21,4 +21,87 @@ model User {
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Storage quota in bytes (default 5GB = 5_368_709_120 bytes)
+  // Using a lower default value to avoid migration issues
+  storageQuota BigInt    @default(5000000000) 
+  storageUsed  BigInt    @default(0)
+  
+  // Relations
+  files       File[]    @relation("FileOwner")
+  folders     Folder[]  @relation("FolderOwner")
+  sharedFiles FileShare[] @relation("FileShareUser")
+}
+
+enum FileAccess {
+  PRIVATE
+  SHARED
+  PUBLIC
+}
+
+model File {
+  id          Int         @id @default(autoincrement())
+  name        String
+  mimeType    String
+  size        BigInt      // Size in bytes
+  path        String      // Storage path
+  accessLevel FileAccess  @default(PRIVATE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  owner       User        @relation("FileOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  folder      Folder?     @relation(fields: [folderId], references: [id])
+  folderId    Int?
+  shares      FileShare[] @relation("FileShares")
+  
+  // Public link token (for public access)
+  publicToken String?     @unique
+  
+  @@index([ownerId])
+  @@index([folderId])
+}
+
+model Folder {
+  id          Int         @id @default(autoincrement())
+  name        String
+  accessLevel FileAccess  @default(PRIVATE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  owner       User        @relation("FolderOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  parent      Folder?     @relation("ParentChild", fields: [parentId], references: [id])
+  parentId    Int?
+  children    Folder[]    @relation("ParentChild")
+  files       File[]
+  
+  @@index([ownerId])
+  @@index([parentId])
+}
+
+enum SharePermission {
+  VIEW
+  EDIT
+  MANAGE
+}
+
+model FileShare {
+  id          Int             @id @default(autoincrement())
+  permission  SharePermission @default(VIEW)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  // Relations
+  file        File            @relation("FileShares", fields: [fileId], references: [id], onDelete: Cascade)
+  fileId      Int
+  user        User            @relation("FileShareUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  
+  // Unique combination to prevent duplicate shares
+  @@unique([fileId, userId])
+  @@index([fileId])
+  @@index([userId])
 }

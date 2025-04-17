@@ -1,6 +1,6 @@
-# Fastify API Template
+# File Management System API
 
-Modern, modular Fastify API template with JWT authentication, PostgreSQL, and Prisma ORM. Features a clean architecture with service layers, route validation, comprehensive error handling, and role-based access control.
+Modern, modular Fastify API for a file management system with JWT authentication, PostgreSQL, and Prisma ORM. Features a clean architecture with service layers, route validation, comprehensive error handling, and role-based access control.
 
 ## Features
 
@@ -26,8 +26,8 @@ Modern, modular Fastify API template with JWT authentication, PostgreSQL, and Pr
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/fastify-api-template.git
-cd fastify-api-template
+git clone https://github.com/yourusername/file-management-system.git
+cd file-management-system
 ```
 
 ### 2. Install dependencies
@@ -46,7 +46,7 @@ cp .env.example .env
 
 ```
 # Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/fastify_db"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/fms_db"
 
 # JWT
 JWT_SECRET="your-secret-jwt-token-for-authentication"
@@ -61,6 +61,10 @@ PORT=3000
 
 # RBAC
 SUPER_ADMIN_KEY="your-super-secret-key-for-creating-super-admin"
+
+# File Storage
+STORAGE_PATH="./storage"
+MAX_FILE_SIZE="50mb"
 ```
 
 Make sure to set a secure, random value for JWT_SECRET and SUPER_ADMIN_KEY.
@@ -70,7 +74,7 @@ Make sure to set a secure, random value for JWT_SECRET and SUPER_ADMIN_KEY.
 Make sure PostgreSQL is running and create a database:
 
 ```bash
-createdb fastify_db
+createdb fms_db
 ```
 
 Run the Prisma migrations:
@@ -79,7 +83,24 @@ Run the Prisma migrations:
 npm run db:migrate
 ```
 
-### 5. Start the server
+### 5. Seed the Database (Optional)
+
+To seed the database with test data including 1 super admin, 1 admin, and 100 regular users:
+
+```bash
+# First, install the required dependencies
+npm install @faker-js/faker --save-dev
+
+# Run the seeder
+npm run db:seed
+```
+
+Default credentials for seeded users:
+- Super Admin: superadmin@example.com / superadmin123
+- Admin: admin@example.com / admin123
+- Regular Users: (various emails) / password123
+
+### 6. Start the server
 
 Development mode with hot reloading:
 
@@ -95,7 +116,7 @@ npm start
 
 ## Role-Based Access Control
 
-This template implements role-based access control with three user roles:
+This application implements role-based access control with three user roles:
 
 - **USER**: Regular users with basic permissions
 - **ADMIN**: Administrative users with elevated permissions
@@ -103,7 +124,7 @@ This template implements role-based access control with three user roles:
 
 ### Creating a Super Admin
 
-To create a Super Admin, send a POST request to `/api/auth/super-admin` with the special header:
+To create a Super Admin, send a POST request to `/api/users/super-admin` with the special header:
 
 ```bash
 X-Super-Admin-Key: your-super-secret-key-from-env
@@ -117,15 +138,22 @@ This header must match the SUPER_ADMIN_KEY value in your .env file.
 |--------|----------|-------|-------------|
 | Register/Login | ✓ | ✓ | ✓ |
 | Create Admins | ✗ | ✗ | ✓ |
-| List Users | ✗ | ✓ | ✓ |
+| List/Search Users | ✗ | ✓ | ✓ |
 | Change User Roles | ✗ | Limited | ✓ |
+| Manage Files | Own Only | All Users | All Users |
 
 ## Project Structure
 
 ```
 src/
 ├── modules/              # Business domain modules
-│   └── auth/             # Authentication module
+│   ├── auth/             # Authentication module
+│   │   ├── routes.js     # Route definitions
+│   │   ├── handlers.js   # Request handlers
+│   │   ├── service.js    # Business logic
+│   │   └── schemas/      # Validation schemas
+│   │       └── index.js
+│   └── users/            # User management module
 │       ├── routes.js     # Route definitions
 │       ├── handlers.js   # Request handlers
 │       ├── service.js    # Business logic
@@ -153,10 +181,39 @@ All endpoints are prefixed with `/api`.
 - `POST /api/auth/register` - Register as a USER (public)
 - `POST /api/auth/login` - Login and get JWT token (public)
 - `GET /api/auth/me` - Get current user info (requires authentication)
-- `POST /api/auth/admin` - Create admin user (requires SUPER_ADMIN role)
-- `POST /api/auth/super-admin` - Create super admin (requires special header)
-- `POST /api/auth/role` - Update user role (requires ADMIN or SUPER_ADMIN role)
-- `GET /api/auth/users` - List all users (requires ADMIN or SUPER_ADMIN role)
+
+### User Management
+
+- `POST /api/users/admin` - Create admin user (requires SUPER_ADMIN role)
+- `POST /api/users/super-admin` - Create super admin (requires special header)
+- `POST /api/users/role` - Update user role (requires ADMIN or SUPER_ADMIN role)
+- `GET /api/users` - List all users (requires ADMIN or SUPER_ADMIN role)
+- `GET /api/users/search` - Search users (requires ADMIN or SUPER_ADMIN role)
+- `GET /api/users/:id` - Get user details (requires ADMIN or SUPER_ADMIN role)
+- `PUT /api/users/:id` - Update user (requires ADMIN or SUPER_ADMIN role)
+- `DELETE /api/users/:id` - Delete user (requires ADMIN or SUPER_ADMIN role)
+
+### File Management
+
+#### Folders
+- `POST /api/files/folders` - Create a new folder
+- `GET /api/files/folders` - List folder contents (files and folders)
+- `DELETE /api/files/folders/:id` - Delete a folder and all its contents
+
+#### Files
+- `GET /api/files/list` - List all files with filtering and pagination
+- `POST /api/files/upload` - Upload a file
+- `GET /api/files/:id/download` - Download a file
+- `DELETE /api/files/:id` - Delete a file
+
+#### Sharing
+- `POST /api/files/share` - Share a file with another user
+- `POST /api/files/:id/public-link` - Create a public link for a file
+- `GET /api/files/public/:token` - Access a file via public link (no auth required)
+
+#### Storage
+- `GET /api/files/storage/info` - Get user's storage usage information
+
 ### Other Endpoints
 
 - `GET /health` - Health check endpoint (not prefixed with /api)
