@@ -16,8 +16,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Prisma
-/prisma/migrations/
-/prisma/.env
 
 # IDE
 .idea/
