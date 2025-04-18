@@ -1,10 +1,8 @@
 const buildApp = require('./app');
 const awsLambdaFastify = require('@fastify/aws-lambda');
 
-const app = buildApp({
-  logger: true // no need for fancy dev logs on Vercel
-});
-
+const app = buildApp({ logger: true });
 const proxy = awsLambdaFastify(app);
 
-exports.handler = proxy;
+// ✅ Export the proxy function as the default export
+module.exports = proxy;
