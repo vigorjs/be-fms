@@ -30,6 +30,58 @@ async function createFolder(request, reply) {
   }
 }
 
+// Get folder by ID handler
+async function getFolderById(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const folderId = parseInt(request.params.id);
+    
+    const folder = await fileService.getFolderById(userId, folderId);
+    
+    return reply.code(200).send(folder);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
+// Get folder path handler
+async function getFolderPath(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const folderId = parseInt(request.params.id);
+    
+    const path = await fileService.getFolderPath(userId, folderId);
+    
+    return reply.code(200).send(path);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
 // Get folder contents handler
 async function getFolderContents(request, reply) {
   const fileService = new FileService(this.prisma);
@@ -382,6 +434,8 @@ async function getUserStorageInfo(request, reply) {
 
 module.exports = {
   createFolder,
+  getFolderById,
+  getFolderPath,
   getFolderContents,
   listFiles,
   uploadFile,

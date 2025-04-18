@@ -18,6 +18,7 @@ const fileuploadPlugin = require('./plugins/fileupload');
 const authRoutes = require('./modules/auth/routes');
 const userRoutes = require('./modules/users/routes');
 const fileRoutes = require('./modules/files/routes');
+const searchRoutes = require('./modules/search/routes');
 
 // Logger configuration
 function createLoggerConfig() {
@@ -123,6 +124,7 @@ function build(opts = {}) {
     apiInstance.register(authRoutes, { prefix: '/auth' });
     apiInstance.register(userRoutes, { prefix: '/users' });
     apiInstance.register(fileRoutes, { prefix: '/files' });
+    apiInstance.register(searchRoutes, { prefix: '/search' });
     
     done();
   }, { prefix: '/api' });

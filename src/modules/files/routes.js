@@ -14,6 +14,18 @@ function fileRoutes(fastify, options, done) {
     preHandler: [fastify.authenticate] 
   }, handlers.getFolderContents);
   
+  // Get folder by ID
+  fastify.get('/folders/:id', { 
+    schema: schemas.getFolderByIdSchema,
+    preHandler: [fastify.authenticate] 
+  }, handlers.getFolderById);
+  
+  // Get folder path (breadcrumb)
+  fastify.get('/folders/:id/path', { 
+    schema: schemas.getFolderPathSchema,
+    preHandler: [fastify.authenticate] 
+  }, handlers.getFolderPath);
+  
   fastify.delete('/folders/:id', { 
     schema: schemas.deleteFolderSchema,
     preHandler: [fastify.authenticate] 
@@ -56,7 +68,7 @@ function fileRoutes(fastify, options, done) {
     schema: schemas.getFileByPublicTokenSchema 
   }, handlers.getFileByPublicToken);
   
-  // New endpoint: Get public file metadata
+  // Get public file metadata
   fastify.get('/public/:token/info', { 
     schema: schemas.getFileInfoByPublicTokenSchema 
   }, handlers.getFileInfoByPublicToken);

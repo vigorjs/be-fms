@@ -66,6 +66,86 @@ class FileService {
   }
 
   /**
+   * Get folder by ID
+   */
+  async getFolderById(userId, folderId) {
+    const folder = await this.prisma.folder.findUnique({
+      where: { id: folderId },
+    });
+
+    if (!folder) {
+      throw createNotFoundError('Folder not found');
+    }
+
+    // Check if user has permission to access this folder
+    if (folder.ownerId !== userId) {
+      throw createForbiddenError('You do not have permission to access this folder');
+    }
+
+    return folder;
+  }
+
+  /**
+   * Get folder path (all parent folders)
+   */
+  async getFolderPath(userId, folderId) {
+    // First, verify the folder exists and user has access
+    const folder = await this.getFolderById(userId, folderId);
+    
+    // Build the path array (starts with My Drive as root)
+    const path = [];
+    
+    // Check if this folder has a parent
+    if (folder.parentId === null) {
+      // This is a root-level folder, just add it to the path
+      path.push(folder);
+    } else {
+      // This is a nested folder, build the entire path recursively
+      await this.buildFolderPathRecursive(userId, folder, path);
+    }
+    
+    // Reverse the path to get it in the correct order (root first)
+    path.reverse();
+    
+    // Add the "My Drive" root at the beginning
+    path.unshift({ id: null, name: "My Drive" });
+    
+    return { path };
+  }
+  
+  /**
+   * Helper function to recursively build folder path
+   * @private
+   */
+  async buildFolderPathRecursive(userId, folder, path) {
+    // Add the current folder to the path
+    path.push(folder);
+    
+    // If this is a root-level folder, we're done
+    if (folder.parentId === null) {
+      return;
+    }
+    
+    // Otherwise, get the parent folder
+    const parentFolder = await this.prisma.folder.findUnique({
+      where: { id: folder.parentId },
+    });
+    
+    // If parent folder not found, we're done (shouldn't happen with proper DB integrity)
+    if (!parentFolder) {
+      return;
+    }
+    
+    // Verify user has permission to access the parent folder
+    if (parentFolder.ownerId !== userId) {
+      throw createForbiddenError('You do not have permission to access this folder path');
+    }
+    
+    // Recursively build path with parent folder
+    await this.buildFolderPathRecursive(userId, parentFolder, path);
+  }
+
+  /**
    * Get folder contents (files and folders)
    */
   async getFolderContents(userId, folderId = null) {

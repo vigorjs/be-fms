@@ -77,6 +77,42 @@ const getFolderContentsSchema = {
   }
 };
 
+// Get folder by ID schema
+const getFolderByIdSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  response: {
+    200: folderSchema
+  }
+};
+
+// Get folder path schema
+const getFolderPathSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'array',
+          items: folderSchema
+        }
+      }
+    }
+  }
+};
+
 // List files schema
 const listFilesSchema = {
   querystring: {
@@ -269,6 +305,8 @@ const getUserStorageInfoSchema = {
 module.exports = {
   createFolderSchema,
   getFolderContentsSchema,
+  getFolderByIdSchema,
+  getFolderPathSchema,
   listFilesSchema,
   uploadFileSchema,
   downloadFileSchema,
