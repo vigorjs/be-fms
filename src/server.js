@@ -1,20 +1,12 @@
 const buildApp = require('./app');
-const pem = require('pem');
-const util = require('util');
+const https = require('https');
+const fs = require('fs');
 require('dotenv').config();
-
-const createCertificate = util.promisify(pem.createCertificate);
 
 const start = async () => {
   try {
-    const { serviceKey: key, certificate: cert } = await createCertificate({
-      days: 365,
-      selfSigned: true,
-      keyBitsize: 2048 // 🔐 This ensures no more "key too small" errors
-    });
-
     const app = buildApp({
-      logger: process.env.NODE_ENV === 'development' ? {
+      logger: {
         transport: {
           target: 'pino-pretty',
           options: {
@@ -26,25 +18,28 @@ const start = async () => {
           }
         },
         disableRequestLogging: true
-      } : true,
-      https: {
-        key,
-        cert
       }
     });
 
-    const port = process.env.PORT || 443;
-    await app.listen({ port, host: '0.0.0.0' });
+    // Load the self-signed SSL cert and private key
+    const options = {
+      key: fs.readFileSync('./ssl/private.key'),
+      cert: fs.readFileSync('./ssl/certificate.crt')
+    };
 
-    const serverUrl = `https://${process.env.HOST || 'localhost'}:${port}`;
-    console.clear();
-    app.log.info('='.repeat(60));
-    app.log.info(`✅ Server successfully started!`);
-    app.log.info(`🚀 Server running at: ${serverUrl}`);
-    app.log.info(`📚 Documentation: ${serverUrl}/documentation`);
-    app.log.info('='.repeat(60));
+    const port = process.env.PORT || 3000;
+
+    // Create the HTTPS server
+    const httpsServer = https.createServer(options, app.server);
+
+    httpsServer.listen(port, () => {
+      console.clear();
+      app.log.info('='.repeat(60));
+      app.log.info(`✅ HTTPS server running at https://localhost:${port}`);
+      app.log.info('='.repeat(60));
+    });
   } catch (err) {
-    console.error("❌ Failed to start server:", err);
+    console.error('❌ Error starting server:', err);
     process.exit(1);
   }
 };
