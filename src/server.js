@@ -1,38 +1,39 @@
-// src/server.js
 const buildApp = require('./app');
+const selfsigned = require('selfsigned');
 require('dotenv').config();
 
+const attrs = [{ name: 'commonName', value: 'localhost' }]; // You can change to your IP or domain
+const pems = selfsigned.generate(attrs, { days: 365 });
+
 const app = buildApp({
-  // We'll override the default Fastify logging behavior
-  logger: {
+  logger: process.env.NODE_ENV === 'development' ? {
     transport: {
       target: 'pino-pretty',
       options: {
         translateTime: 'HH:MM:ss Z',
         ignore: 'pid,hostname',
         colorize: true,
-        // Customize log output
         messageFormat: '{msg}',
-        // Suppress the default Fastify startup messages
         suppressFlushSyncWarning: true
       }
     },
-    // Disable default listen logs that show all bound addresses
     disableRequestLogging: true
+  } : true,
+  https: {
+    key: pems.private,
+    cert: pems.cert,
   }
 });
 
 const start = async () => {
   try {
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 443; // Default to HTTPS port
     await app.listen({ port, host: '0.0.0.0' });
-    
-    // Custom formatted server startup message
-    const serverUrl = `http://localhost:${port}`;
+
+    const serverUrl = `https://${process.env.HOST || 'localhost'}:${port}`;
     const docsUrl = `${serverUrl}/documentation`;
     const apiUrl = `${serverUrl}/api`;
-    
-    // Clear console and show a neat banner
+
     console.clear();
     app.log.info('='.repeat(60));
     app.log.info(`✅ Server successfully started!`);
