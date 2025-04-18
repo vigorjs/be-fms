@@ -1,9 +1,14 @@
 {
     "version": 2,
-    "builds": [
+    "functions": {
+      "src/lambda.js": {
+        "runtime": "nodejs18.x"
+      }
+    },
+    "routes": [
       {
-        "src": "src/server.js",
-        "use": "@vercel/node"
+        "src": "/(.*)",
+        "dest": "src/lambda.js"
       }
     ]
   }

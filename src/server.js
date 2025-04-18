@@ -4,19 +4,22 @@ require('dotenv').config();
 
 const app = buildApp({
   // We'll override the default Fastify logging behavior
-  logger: process.env.NODE_ENV === 'development' ? {
+  logger: {
     transport: {
       target: 'pino-pretty',
       options: {
         translateTime: 'HH:MM:ss Z',
         ignore: 'pid,hostname',
         colorize: true,
+        // Customize log output
         messageFormat: '{msg}',
+        // Suppress the default Fastify startup messages
         suppressFlushSyncWarning: true
       }
     },
+    // Disable default listen logs that show all bound addresses
     disableRequestLogging: true
-  } : true  
+  }
 });
 
 const start = async () => {
