@@ -2,8 +2,12 @@ const buildApp = require('./app');
 const selfsigned = require('selfsigned');
 require('dotenv').config();
 
-const attrs = [{ name: 'commonName', value: 'localhost' }]; // You can change to your IP or domain
-const pems = selfsigned.generate(attrs, { days: 365 });
+// Generate a 2048-bit RSA key (stronger key)
+const attrs = [{ name: 'commonName', value: process.env.HOST || 'localhost' }];
+const pems = selfsigned.generate(attrs, {
+  days: 365,
+  keySize: 2048, // <- This fixes the error
+});
 
 const app = buildApp({
   logger: process.env.NODE_ENV === 'development' ? {
@@ -27,7 +31,7 @@ const app = buildApp({
 
 const start = async () => {
   try {
-    const port = process.env.PORT || 443; // Default to HTTPS port
+    const port = process.env.PORT || 443;
     await app.listen({ port, host: '0.0.0.0' });
 
     const serverUrl = `https://${process.env.HOST || 'localhost'}:${port}`;
