@@ -30,7 +30,6 @@
     "@fastify/swagger-ui": "^5.2.2",
     "@logtail/pino": "^0.5.2",
     "@prisma/client": "^6.6.0",
-    "@vercel/node": "^5.1.14",
     "bcrypt": "^5.1.1",
     "busboy": "^1.6.0",
     "dotenv": "^16.4.7",
