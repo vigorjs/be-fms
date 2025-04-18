@@ -160,7 +160,7 @@ class FileService {
   /**
    * Upload a file
    */
-  async uploadFile(userId, file, { name, folderId = null }) {
+  async uploadFile(userId, file, { name, folderId = null, accessLevel = 'PRIVATE' }) {
     // Check if user has enough storage
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -215,8 +215,25 @@ class FileService {
         path: relativePath,
         ownerId: userId,
         folderId,
+        accessLevel, // Set the access level from the parameter
       },
     });
+    
+    // If PUBLIC access level, generate a public token automatically
+    if (accessLevel === 'PUBLIC' && !fileRecord.publicToken) {
+      const token = crypto.randomBytes(32).toString('hex');
+      
+      // Update the file with the public token
+      await this.prisma.file.update({
+        where: { id: fileRecord.id },
+        data: {
+          publicToken: token,
+        },
+      });
+      
+      // Update our local copy of the record as well
+      fileRecord.publicToken = token;
+    }
 
     // Update user's storage usage
     await this.prisma.user.update({
@@ -537,6 +554,35 @@ class FileService {
     } catch (error) {
       throw createNotFoundError('File content not found');
     }
+  }
+  
+  /**
+   * Get file info by public token (metadata only, no file content)
+   */
+  async getFileInfoByPublicToken(token) {
+    const file = await this.prisma.file.findUnique({
+      where: { publicToken: token },
+      select: {
+        id: true,
+        name: true,
+        mimeType: true,
+        size: true,
+        accessLevel: true,
+        ownerId: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    if (!file || file.accessLevel !== 'PUBLIC') {
+      throw createNotFoundError('File not found or not public');
+    }
+    
+    // Convert BigInt to String for JSON serialization
+    return {
+      ...file,
+      size: file.size.toString(), // Convert BigInt to String
+    };
   }
 
   /**

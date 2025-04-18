@@ -56,6 +56,11 @@ function fileRoutes(fastify, options, done) {
     schema: schemas.getFileByPublicTokenSchema 
   }, handlers.getFileByPublicToken);
   
+  // New endpoint: Get public file metadata
+  fastify.get('/public/:token/info', { 
+    schema: schemas.getFileInfoByPublicTokenSchema 
+  }, handlers.getFileInfoByPublicToken);
+  
   // Storage info
   fastify.get('/storage/info', { 
     schema: schemas.getUserStorageInfoSchema,

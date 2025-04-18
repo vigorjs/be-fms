@@ -79,7 +79,15 @@ function build(opts = {}) {
   const app = fastify(options);
 
   // Register plugins
-  app.register(cors);
+  app.register(cors, {
+    origin: true, // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Allow all methods including DELETE
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Super-Admin-Key'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+  });
+  
   app.register(loggerPlugin);
   app.register(prismaPlugin);
   app.register(jwtPlugin);

@@ -216,6 +216,38 @@ const getFileByPublicTokenSchema = {
     properties: {
       token: { type: 'string' }
     }
+  },
+  querystring: {
+    type: 'object',
+    properties: {
+      inline: { type: 'string', enum: ['true', 'false'] }
+    }
+  }
+};
+
+// Get file info by public token schema
+const getFileInfoByPublicTokenSchema = {
+  params: {
+    type: 'object',
+    required: ['token'],
+    properties: {
+      token: { type: 'string' }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer' },
+        name: { type: 'string' },
+        mimeType: { type: 'string' },
+        size: { type: 'string' },
+        accessLevel: { type: 'string', enum: ['PRIVATE', 'SHARED', 'PUBLIC'] },
+        ownerId: { type: 'integer' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' }
+      }
+    }
   }
 };
 
@@ -245,5 +277,6 @@ module.exports = {
   shareFileSchema,
   createPublicLinkSchema,
   getFileByPublicTokenSchema,
+  getFileInfoByPublicTokenSchema,
   getUserStorageInfoSchema
 };
