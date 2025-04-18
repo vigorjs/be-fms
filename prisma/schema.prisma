@@ -24,7 +24,7 @@ model User {
   
   // Storage quota in bytes (default 5GB = 5_368_709_120 bytes)
   // Using a lower default value to avoid migration issues
-  storageQuota BigInt    @default(5000000000) 
+  storageQuota BigInt    @default(1000000000) 
   storageUsed  BigInt    @default(0)
   
   // Relations
