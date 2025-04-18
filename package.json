@@ -4,7 +4,6 @@
   "description": "Modern, modular Fastify API template with JWT authentication, PostgreSQL, and Prisma ORM",
   "main": "src/server.js",
   "scripts": {
-    "build": "prisma generate",
     "postinstall": "prisma generate",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
