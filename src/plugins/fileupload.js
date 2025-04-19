@@ -5,7 +5,7 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const stream = require('stream');
-const pump = util.promisify(stream.pipeline);
+const pipeline = util.promisify(stream.pipeline);
 
 module.exports = fp(async function (fastify, opts) {
   const maxFileSize = parseInt(process.env.MAX_FILE_SIZE || '52428800'); // 50MB default
@@ -35,6 +35,7 @@ module.exports = fp(async function (fastify, opts) {
       return done(error);
     }
 
+    // File buffer to collect the uploaded file data
     let fileData = null;
     let fields = {};
     let error = null;
@@ -43,55 +44,66 @@ module.exports = fp(async function (fastify, opts) {
     bb.on('file', (fieldname, file, fileInfo) => {
       fastify.log.info(`Processing file upload: ${fileInfo.filename} (mimetype: ${fileInfo.mimeType})`);
       
-      // Generate unique filename to prevent collisions
-      const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2)}_${fileInfo.filename}`;
-      const filePath = path.join(uploadsPath, uniqueFileName);
-      
+      const chunks = [];
       let fileSize = 0;
-      const writeStream = fs.createWriteStream(filePath);
-      
+
       file.on('data', (chunk) => {
+        // Store the chunk in memory
+        chunks.push(chunk);
         fileSize += chunk.length;
-        fastify.log.debug(`Received chunk of size ${chunk.length} bytes`);
         
-        // Check file size
+        fastify.log.debug(`Received chunk of size ${chunk.length} bytes, total so far: ${fileSize} bytes`);
+        
+        // Check file size limit
         if (fileSize > maxFileSize) {
           error = new Error(`File size exceeds the allowed limit of ${maxFileSize} bytes`);
           file.resume(); // Discard the rest of the file
-          writeStream.end();
         }
       });
 
       file.on('end', () => {
-        fastify.log.info(`File upload complete: ${fileInfo.filename}, size: ${fileSize} bytes`);
-        
-        if (!error && fileSize > 0) {
+        if (!error && chunks.length > 0) {
+          // Combine all chunks into a single buffer
+          const fileBuffer = Buffer.concat(chunks);
+          
+          // Verify buffer size matches expected size
+          if (fileBuffer.length !== fileSize) {
+            fastify.log.error(`File size mismatch: expected ${fileSize} bytes, got ${fileBuffer.length} bytes`);
+          }
+          
+          // Generate a unique filename
+          const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2)}_${fileInfo.filename}`;
+          const relativePath = path.join('uploads', uniqueFileName);
+          const fullPath = path.join(storagePath, relativePath);
+          
+          // Save the file to disk
+          try {
+            // Ensure directory exists
+            fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+            fs.writeFileSync(fullPath, fileBuffer);
+            
+            fastify.log.info(`File saved to disk: ${fullPath}, size: ${fileBuffer.length} bytes`);
+          } catch (err) {
+            fastify.log.error(`Failed to save file to disk: ${err.message}`);
+            error = err;
+            return;
+          }
+          
           fileData = {
             fieldname,
             filename: fileInfo.filename,
-            savedAs: uniqueFileName,
             encoding: fileInfo.encoding,
             mimetype: fileInfo.mimeType,
-            path: filePath,
-            size: fileSize,
-            relativePath: path.join('uploads', uniqueFileName),
-            buffer: null // We don't need this since we're writing to disk directly
+            buffer: fileBuffer,  // Keep the buffer for content searching
+            size: fileBuffer.length,
+            path: fullPath,
+            relativePath: relativePath
           };
-        } else if (fileSize === 0) {
+          
+          fastify.log.info(`File upload complete: ${fileInfo.filename}, size: ${fileBuffer.length} bytes`);
+        } else if (chunks.length === 0 || fileSize === 0) {
           error = new Error('Uploaded file is empty (0 bytes)');
-          // Try to delete the empty file
-          try {
-            fs.unlinkSync(filePath);
-          } catch (err) {
-            fastify.log.error(`Failed to delete empty file: ${err.message}`);
-          }
         }
-      });
-
-      // Handle errors in the streaming process
-      pump(file, writeStream).catch(err => {
-        fastify.log.error(`Error writing file to disk: ${err.message}`);
-        error = err;
       });
     });
 
