@@ -2,8 +2,6 @@ const handlers = require('./handlers');
 const schemas = require('./schemas');
 
 function fileRoutes(fastify, options, done) {
-  // Register @fastify/multipart (pastikan ini hanya dipanggil sekali di aplikasi Anda)
-  fastify.register(require('@fastify/multipart'), { limits: { fileSize: 65536 } }); // Contoh batas 64KB
 
   // Folder operations
   fastify.post('/folders', {
