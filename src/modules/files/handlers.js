@@ -1,6 +1,8 @@
 // src/modules/files/handlers.js
 const FileService = require('./service');
 const util = require('util');
+const fs = require('fs');
+const path = require('path');
 const { pipeline } = require('stream');
 const pump = util.promisify(pipeline);
 
@@ -163,7 +165,11 @@ async function uploadFile(request, reply) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
     
-    request.log.info(`File received: ${uploadData.file.filename}, size: ${uploadData.file.size} bytes`);
+    request.log.info(`File received: ${uploadData.file.filename}, size: ${uploadData.file.size} bytes, buffer: ${!!uploadData.file.buffer}`);
+    
+    if (!uploadData.file.buffer || uploadData.file.size === 0) {
+      return reply.code(400).send({ error: 'Invalid file upload: missing data or empty file' });
+    }
     
     // Extract form fields
     const name = uploadData.fields.name || uploadData.file.filename;
@@ -194,7 +200,7 @@ async function uploadFile(request, reply) {
     
     return reply.code(201).send(uploadedFile);
   } catch (error) {
-    request.log.error(error);
+    request.log.error(`Error uploading file: ${error.message}`);
     
     if (error.statusCode) {
       return reply.code(error.statusCode).send({ 
@@ -221,14 +227,15 @@ async function downloadFile(request, reply) {
     // Set response headers for download
     reply.header('Content-Disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
     reply.header('Content-Type', file.mimeType);
-    
-    // Convert BigInt to String for Content-Length to avoid issues
     reply.header('Content-Length', String(file.size));
+    
+    // Log file details for debugging
+    request.log.info(`Sending file: ${file.name}, size: ${file.size} bytes (DB size: ${file.originalSize} bytes)`);
     
     // Send the buffer directly
     return reply.send(file.buffer);
   } catch (error) {
-    request.log.error(error);
+    request.log.error(`Error downloading file: ${error.message}`);
     
     if (error.statusCode) {
       return reply.code(error.statusCode).send({ 
@@ -361,14 +368,15 @@ async function getFileByPublicToken(request, reply) {
     // Set response headers for download or inline display
     reply.header('Content-Disposition', `${disposition}; filename="${encodeURIComponent(file.name)}"`);
     reply.header('Content-Type', file.mimeType);
-    
-    // Convert BigInt to String for Content-Length to avoid issues
     reply.header('Content-Length', String(file.size));
+    
+    // Log file details for debugging
+    request.log.info(`Sending public file: ${file.name}, size: ${file.size} bytes (DB size: ${file.originalSize} bytes)`);
     
     // Send the buffer directly
     return reply.send(file.buffer);
   } catch (error) {
-    request.log.error(error);
+    request.log.error(`Error accessing public file: ${error.message}`);
     
     if (error.statusCode) {
       return reply.code(error.statusCode).send({ 

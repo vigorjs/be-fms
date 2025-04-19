@@ -1,5 +1,6 @@
 // src/modules/files/service.js
 const fs = require('fs').promises;
+const fsSync = require('fs'); // Add the synchronous version for existsSync
 const path = require('path');
 const crypto = require('crypto');
 const { 
@@ -273,18 +274,34 @@ class FileService {
         throw createForbiddenError('You do not have permission to upload to this folder');
       }
     }
-
-    // Generate unique file path
-    const fileExt = path.extname(file.filename);
-    const uniqueFileName = `${userId}_${Date.now()}_${crypto.randomBytes(8).toString('hex')}${fileExt}`;
-    const relativePath = path.join('uploads', uniqueFileName);
-    const fullPath = path.join(STORAGE_PATH, relativePath);
-
-    // Ensure directory exists
-    await fs.mkdir(path.dirname(fullPath), { recursive: true });
-
-    // Write file to disk
-    await fs.writeFile(fullPath, file.buffer);
+    
+    // Verify we have valid file data
+    if (!file || !file.buffer || file.size === 0) {
+      throw createBadRequestError('Invalid file: empty or missing file data');
+    }
+    
+    // Buffer verification should be done in the plugin, but let's double-check
+    const bufferSize = file.buffer.length;
+    if (bufferSize !== file.size) {
+      console.warn(`File size mismatch: reported ${file.size} bytes but buffer is ${bufferSize} bytes`); 
+    }
+    
+    // Make sure we have a path to save the file
+    const relativePath = file.relativePath || `uploads/${userId}_${Date.now()}_${path.basename(file.filename)}`;
+    const fullPath = file.path || path.join(STORAGE_PATH, relativePath);
+    
+    // Save the file to disk
+    try {
+      // Make sure directory exists
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      
+      // Write buffer to disk
+      await fs.writeFile(fullPath, file.buffer);
+      console.log(`File saved to disk: ${fullPath}, size: ${bufferSize} bytes`);
+    } catch (err) {
+      console.error(`Failed to save file to disk: ${err.message}`);
+      throw createBadRequestError(`Failed to save file: ${err.message}`);
+    }
 
     // Create file record in database
     const fileRecord = await this.prisma.file.create({
@@ -361,16 +378,23 @@ class FileService {
       // Read file from disk
       const fileBuffer = await fs.readFile(fullPath);
       
-      // Ensure the size is a Number not a BigInt when stringified
-      const numericSize = Number(file.size.toString());
+      // Verify the file size
+      const actualSize = fileBuffer.length;
+      const expectedSize = Number(file.size.toString());
+      
+      if (actualSize !== expectedSize) {
+        console.warn(`File size mismatch for file ${fileId}: DB has ${expectedSize} bytes, actual file is ${actualSize} bytes`);
+      }
       
       return {
         name: file.name,
         mimeType: file.mimeType || 'application/octet-stream', // Default mime type if not set
-        size: numericSize,
+        size: actualSize, // Use actual size from buffer
         buffer: fileBuffer,
+        originalSize: expectedSize // Include DB size for comparison
       };
     } catch (error) {
+      console.error(`Error reading file ${fileId} at ${fullPath}: ${error.message}`);
       throw createNotFoundError('File content not found');
     }
   }
@@ -622,16 +646,24 @@ class FileService {
       // Read file from disk
       const fileBuffer = await fs.readFile(fullPath);
       
-      // Ensure the size is a Number not a BigInt when stringified
-      const numericSize = Number(file.size.toString());
+      // Verify the file size
+      const actualSize = fileBuffer.length;
+      const expectedSize = Number(file.size.toString());
+      
+      if (actualSize !== expectedSize) {
+        console.warn(`Public file size mismatch for token ${token}: DB has ${expectedSize} bytes, actual file is ${actualSize} bytes`);
+      }
       
       return {
+        id: file.id,
         name: file.name,
         mimeType: file.mimeType || 'application/octet-stream', // Default mime type if not set
-        size: numericSize,
+        size: actualSize, // Use actual size from buffer
         buffer: fileBuffer,
+        originalSize: expectedSize // Include DB size for comparison
       };
     } catch (error) {
+      console.error(`Error reading public file with token ${token} at ${fullPath}: ${error.message}`);
       throw createNotFoundError('File content not found');
     }
   }
