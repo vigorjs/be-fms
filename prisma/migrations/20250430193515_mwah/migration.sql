@@ -16,7 +16,7 @@ CREATE TABLE "User" (
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "storageQuota" BIGINT NOT NULL DEFAULT 5000000000,
+    "storageQuota" BIGINT NOT NULL DEFAULT 1000000000,
     "storageUsed" BIGINT NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -29,6 +29,7 @@ CREATE TABLE "File" (
     "mimeType" TEXT NOT NULL,
     "size" BIGINT NOT NULL,
     "path" TEXT NOT NULL,
+    "contentText" TEXT,
     "accessLevel" "FileAccess" NOT NULL DEFAULT 'PRIVATE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

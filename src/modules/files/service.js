@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs'); // Add the synchronous version for existsSync
 const path = require('path');
 const crypto = require('crypto');
+const FileParser = require('../../utils/fileParser');
 const { 
   createBadRequestError, 
   createNotFoundError, 
@@ -287,34 +288,41 @@ class FileService {
     }
     
     // Make sure we have a path to save the file
-    const relativePath = file.relativePath || `uploads/${userId}_${Date.now()}_${path.basename(file.filename)}`;
-    const fullPath = file.path || path.join(STORAGE_PATH, relativePath);
+    const relativePath = `uploads/${userId}_${Date.now()}_${path.basename(file.filename)}`;
+    const fullPath = path.join(STORAGE_PATH, relativePath);
     
-    // Save the file to disk
-    try {
-      // Make sure directory exists
-      await fs.mkdir(path.dirname(fullPath), { recursive: true });
-      
-      // Write buffer to disk
-      await fs.writeFile(fullPath, file.buffer);
-      console.log(`File saved to disk: ${fullPath}, size: ${bufferSize} bytes`);
-    } catch (err) {
-      console.error(`Failed to save file to disk: ${err.message}`);
-      throw createBadRequestError(`Failed to save file: ${err.message}`);
-    }
+    // Simpan file ke disk
+  
+  await fs.mkdir(path.dirname(fullPath), { recursive: true });
+  await fs.writeFile(fullPath, file.buffer);
 
-    // Create file record in database
-    const fileRecord = await this.prisma.file.create({
-      data: {
-        name: name || file.filename,
-        mimeType: file.mimetype,
-        size: BigInt(file.size),
-        path: relativePath,
-        ownerId: userId,
-        folderId,
-        accessLevel, // Set the access level from the parameter
-      },
-    });
+  // Ekstrak teks dari file
+  let contentText = null;
+  try {
+    contentText = await FileParser.extractText(fullPath, file.mimetype);
+    
+    // Batasi ukuran teks jika terlalu besar (misal 1MB)
+    if (contentText && contentText.length > 1000000) {
+      contentText = contentText.substring(0, 1000000) + '... [TEXT TRUNCATED]';
+    }
+  } catch (error) {
+    console.error('Error extracting text content:', error);
+    contentText = null;
+  }
+
+  // Buat record file di database
+  const fileRecord = await this.prisma.file.create({
+    data: {
+      name: name || file.filename,
+      mimeType: file.mimetype,
+      size: BigInt(file.size),
+      path: relativePath,
+      contentText, // Simpan teks yang diekstrak
+      ownerId: userId,
+      folderId,
+      accessLevel,
+    },
+  });
     
     // If PUBLIC access level, generate a public token automatically
     if (accessLevel === 'PUBLIC' && !fileRecord.publicToken) {

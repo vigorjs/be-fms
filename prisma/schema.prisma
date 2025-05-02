@@ -45,6 +45,7 @@ model File {
   mimeType    String
   size        BigInt      // Size in bytes
   path        String      // Storage path
+  contentText String?
   accessLevel FileAccess  @default(PRIVATE)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

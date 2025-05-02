@@ -8,6 +8,7 @@ const fileSchema = {
     name: { type: 'string' },
     mimeType: { type: 'string' },
     size: { type: 'integer' },
+    contentText: { type: ['string', 'null'] }, // Add contentText to schema
     accessLevel: { type: 'string', enum: ['PRIVATE', 'SHARED', 'PUBLIC'] },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
