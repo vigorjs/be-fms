@@ -9,6 +9,26 @@ function fileRoutes(fastify, options, done) {
     preHandler: [fastify.authenticate] 
   }, handlers.createFolder);
   
+  fastify.put('/folders/:id/rename', {
+    schema: schemas.renameFolderSchema,
+    preHandler: [fastify.authenticate]
+  }, handlers.renameFolder);
+  
+  fastify.put('/folders/:id/access', {
+    schema: schemas.updateFolderAccessLevelSchema,
+    preHandler: [fastify.authenticate]
+  }, handlers.updateFolderAccessLevel);
+  
+  fastify.post('/folders/share', {
+    schema: schemas.shareFolderSchema,
+    preHandler: [fastify.authenticate]
+  }, handlers.shareFolder);
+  
+  fastify.post('/folders/:id/public-link', {
+    schema: schemas.createFolderPublicLinkSchema,
+    preHandler: [fastify.authenticate]
+  }, handlers.createFolderPublicLink);
+  
   fastify.get('/folders', { 
     schema: schemas.getFolderContentsSchema,
     preHandler: [fastify.authenticate] 
@@ -36,6 +56,16 @@ function fileRoutes(fastify, options, done) {
     schema: schemas.listFilesSchema,
     preHandler: [fastify.authenticate] 
   }, handlers.listFiles);
+  
+  fastify.put('/:id/rename', {
+    schema: schemas.renameFileSchema,
+    preHandler: [fastify.authenticate]
+  }, handlers.renameFile);
+  
+  fastify.put('/:id/access', {
+    schema: schemas.updateFileAccessLevelSchema,
+    preHandler: [fastify.authenticate]
+  }, handlers.updateFileAccessLevel);
   
   fastify.post('/upload', { 
     schema: schemas.uploadFileSchema,

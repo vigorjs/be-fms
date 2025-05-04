@@ -32,6 +32,112 @@ async function createFolder(request, reply) {
   }
 }
 
+// Rename folder handler
+async function renameFolder(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const folderId = parseInt(request.params.id);
+    const { name } = request.body;
+    
+    const folder = await fileService.renameFolder(userId, folderId, name);
+    
+    return reply.code(200).send(folder);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
+// Update folder access level handler
+async function updateFolderAccessLevel(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const folderId = parseInt(request.params.id);
+    const { accessLevel } = request.body;
+    
+    const folder = await fileService.updateFolderAccessLevel(userId, folderId, accessLevel);
+    
+    return reply.code(200).send(folder);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
+// Share folder handler
+async function shareFolder(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const { folderId, email, permission } = request.body;
+    
+    const result = await fileService.shareFolder(userId, folderId, email, permission);
+    
+    return reply.code(200).send(result);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
+// Create folder public link handler
+async function createFolderPublicLink(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const folderId = parseInt(request.params.id);
+    
+    const result = await fileService.createFolderPublicLink(userId, folderId);
+    
+    return reply.code(200).send(result);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
 // Get folder by ID handler
 async function getFolderById(request, reply) {
   const fileService = new FileService(this.prisma);
@@ -131,6 +237,60 @@ async function listFiles(request, reply) {
     const result = await fileService.listFiles(userId, options);
     
     return reply.code(200).send(result);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
+// Rename file handler
+async function renameFile(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const fileId = parseInt(request.params.id);
+    const { name } = request.body;
+    
+    const file = await fileService.renameFile(userId, fileId, name);
+    
+    return reply.code(200).send(file);
+  } catch (error) {
+    request.log.error(error);
+    
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({ 
+        error: error.message 
+      });
+    }
+    
+    return reply.code(500).send({ 
+      error: 'Internal server error' 
+    });
+  }
+}
+
+// Update file access level handler
+async function updateFileAccessLevel(request, reply) {
+  const fileService = new FileService(this.prisma);
+  
+  try {
+    const userId = request.user.id;
+    const fileId = parseInt(request.params.id);
+    const { accessLevel } = request.body;
+    
+    const file = await fileService.updateFileAccessLevel(userId, fileId, accessLevel);
+    
+    return reply.code(200).send(file);
   } catch (error) {
     request.log.error(error);
     
@@ -442,10 +602,16 @@ async function getUserStorageInfo(request, reply) {
 
 module.exports = {
   createFolder,
+  renameFolder,
+  updateFolderAccessLevel,
+  shareFolder,
+  createFolderPublicLink,
   getFolderById,
   getFolderPath,
   getFolderContents,
   listFiles,
+  renameFile,
+  updateFileAccessLevel,
   uploadFile,
   downloadFile,
   deleteFile,

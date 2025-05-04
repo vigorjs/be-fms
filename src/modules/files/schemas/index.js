@@ -303,6 +303,126 @@ const getUserStorageInfoSchema = {
   }
 };
 
+// Rename folder schema
+const renameFolderSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  body: {
+    type: 'object',
+    required: ['name'],
+    properties: {
+      name: { type: 'string', minLength: 1 }
+    }
+  },
+  response: {
+    200: folderSchema
+  }
+};
+
+// Update folder access level schema
+const updateFolderAccessLevelSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  body: {
+    type: 'object',
+    required: ['accessLevel'],
+    properties: {
+      accessLevel: { type: 'string', enum: ['PRIVATE', 'SHARED', 'PUBLIC'] }
+    }
+  },
+  response: {
+    200: folderSchema
+  }
+};
+
+// Rename file schema
+const renameFileSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  body: {
+    type: 'object',
+    required: ['name'],
+    properties: {
+      name: { type: 'string', minLength: 1 }
+    }
+  },
+  response: {
+    200: fileSchema
+  }
+};
+
+// Update file access level schema
+const updateFileAccessLevelSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  body: {
+    type: 'object',
+    required: ['accessLevel'],
+    properties: {
+      accessLevel: { type: 'string', enum: ['PRIVATE', 'SHARED', 'PUBLIC'] }
+    }
+  },
+  response: {
+    200: fileSchema
+  }
+};
+
+// Share folder schema
+const shareFolderSchema = {
+  body: {
+    type: 'object',
+    required: ['folderId', 'email'],
+    properties: {
+      folderId: { type: 'integer' },
+      email: { type: 'string', format: 'email' },
+      permission: { type: 'string', enum: ['VIEW', 'EDIT', 'MANAGE'], default: 'VIEW' }
+    }
+  },
+  response: {
+    200: fileShareSchema
+  }
+};
+
+// Create folder public link schema
+const createFolderPublicLinkSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'integer' }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        publicToken: { type: 'string' },
+        url: { type: 'string' }
+      }
+    }
+  }
+};
+
 module.exports = {
   createFolderSchema,
   getFolderContentsSchema,
@@ -317,5 +437,12 @@ module.exports = {
   createPublicLinkSchema,
   getFileByPublicTokenSchema,
   getFileInfoByPublicTokenSchema,
-  getUserStorageInfoSchema
+  getUserStorageInfoSchema,
+  // New schemas
+  renameFolderSchema,
+  updateFolderAccessLevelSchema,
+  renameFileSchema,
+  updateFileAccessLevelSchema,
+  shareFolderSchema,
+  createFolderPublicLinkSchema
 };
